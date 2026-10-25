@@ -45,6 +45,10 @@ def campos(club: str) -> str:
     return ",".join(nombres)
 
 
+class ErrorAPI(RuntimeError):
+    """Error de cliente (4xx) devuelto por la API: no tiene sentido reintentar."""
+
+
 def pedir(params: dict, intentos: int = 3) -> dict:
     base = {
         "account_id": ACCOUNT_ID,
@@ -67,24 +71,57 @@ def pedir(params: dict, intentos: int = 3) -> dict:
             })
             with urllib.request.urlopen(req, timeout=30) as r:
                 return json.load(r)
+        except urllib.error.HTTPError as e:
+            cuerpo = e.read().decode("utf-8", "replace")[:300].replace("\n", " ")
+            if 400 <= e.code < 500 and e.code != 429:
+                raise ErrorAPI(f"HTTP {e.code} con parámetros {sorted(params)}: {cuerpo}") from None
+            ultimo = f"HTTP {e.code}: {cuerpo}"
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             ultimo = e
-            time.sleep(2 * (i + 1))
+        time.sleep(2 * (i + 1))
     raise RuntimeError(f"Falló la consulta a PriceSmart tras {intentos} intentos: {ultimo}")
 
 
-def descubrir_categorias() -> list[str]:
-    """Categorías de primer nivel, leídas de las facetas de una búsqueda general."""
+def _raices(respuesta: dict) -> list[str]:
+    cats = respuesta.get("facet_counts", {}).get("facet_fields", {}).get("category", [])
+    return [c["cat_id"] for c in cats if not c.get("parent")]
+
+
+def categorias_de_archivo(ruta: str = "categorias.txt") -> list[str]:
+    """Lista manual opcional: un ID de categoría por línea (# para comentarios)."""
     try:
-        r = pedir({"search_type": "keyword", "q": "*", "rows": "1", "start": "0",
-                   "fl": "pid", "facet.field": "category", "facet.limit": "-1"})
-        cats = r.get("facet_counts", {}).get("facet_fields", {}).get("category", [])
-        raiz = [c["cat_id"] for c in cats if not c.get("parent")]
-        if raiz:
-            return raiz
-    except Exception as e:  # noqa: BLE001
-        print(f"  aviso: no pude descubrir categorías ({e}); uso las de semilla", file=sys.stderr)
-    return list(CATEGORIAS_SEMILLA)
+        with open(ruta, encoding="utf-8") as f:
+            return [l.split("#")[0].strip() for l in f if l.split("#")[0].strip()]
+    except FileNotFoundError:
+        return []
+
+
+def descubrir_categorias(maximo: int = 80) -> list[str]:
+    """Departamentos (categorías de primer nivel). Dos intentos: facetas de una búsqueda
+    general y, si falla, un barrido de los códigos G10D01..G10D<maximo>."""
+    try:
+        r = pedir({"search_type": "keyword", "q": "*", "rows": "1", "start": "0", "fl": "pid"})
+        raices = _raices(r)
+        if len(raices) > 1:
+            return raices
+        print("  aviso: la búsqueda general no devolvió varios departamentos; hago el barrido",
+              file=sys.stderr)
+    except ErrorAPI as e:
+        print(f"  aviso: búsqueda general no disponible ({e}); hago el barrido", file=sys.stderr)
+
+    encontradas: list[str] = []
+    for n in range(1, maximo + 1):
+        cid = f"G10D{n:02d}"
+        try:
+            r = pedir({"search_type": "category", "q": cid, "rows": "1", "start": "0", "fl": "pid"})
+        except ErrorAPI:
+            continue
+        if r.get("response", {}).get("numFound", 0) > 0 and cid in r.get("category_map", {}):
+            encontradas.append(cid)
+        time.sleep(0.3)
+    if not encontradas:
+        print("  aviso: el barrido no encontró nada; uso la categoría semilla", file=sys.stderr)
+    return encontradas or list(CATEGORIAS_SEMILLA)
 
 
 def productos_de_categoria(cat: str, club: str, max_paginas: int = 60) -> list[dict]:
@@ -160,7 +197,7 @@ def main() -> int:
                 fila = normalizar(d, args.club)
                 vistos[fila["pid"]] = fila
     else:
-        cats = args.categorias or descubrir_categorias()
+        cats = args.categorias or categorias_de_archivo() or descubrir_categorias()
         print(f"Club {args.club} ({CLUBES[args.club]}); categorías: {', '.join(cats)}")
         for cat in cats:
             docs = productos_de_categoria(cat, args.club)

@@ -57,6 +57,55 @@ def test_todos_los_titulos_tienen_tamano_interpretable():
         assert t.dimension_principal and not t.ambiguo, (d["title"], t.notas)
 
 
+# ---------------------------------------------------------------- descubrimiento de categorías (API simulada)
+def _con_api_falsa(fn):
+    original, pausa = pricesmart.pedir, pricesmart.time.sleep
+    pricesmart.time.sleep = lambda s: None
+    try:
+        return fn()
+    finally:
+        pricesmart.pedir, pricesmart.time.sleep = original, pausa
+
+
+def test_descubre_departamentos_por_facetas():
+    def falsa(params, intentos=3):
+        return {"facet_counts": {"facet_fields": {"category": [
+            {"cat_id": "G10D03", "parent": ""}, {"cat_id": "G10D05", "parent": ""},
+            {"cat_id": "G10D03009", "parent": "G10D03"}]}}}
+    pricesmart.pedir = falsa
+    assert _con_api_falsa(pricesmart.descubrir_categorias) == ["G10D03", "G10D05"]
+
+
+def test_si_la_busqueda_general_da_400_barre_los_codigos():
+    existentes = {"G10D02", "G10D03", "G10D07"}
+
+    def falsa(params, intentos=3):
+        if params["search_type"] == "keyword":
+            raise pricesmart.ErrorAPI("HTTP 400")
+        cid = params["q"]
+        if cid in existentes:
+            return {"response": {"numFound": 5}, "category_map": {cid: "X"}}
+        return {"response": {"numFound": 0}, "category_map": {}}
+    pricesmart.pedir = falsa
+    assert _con_api_falsa(pricesmart.descubrir_categorias) == ["G10D02", "G10D03", "G10D07"]
+
+
+def test_si_todo_falla_cae_a_la_semilla():
+    def falsa(params, intentos=3):
+        raise pricesmart.ErrorAPI("HTTP 400")
+    pricesmart.pedir = falsa
+    assert _con_api_falsa(pricesmart.descubrir_categorias) == ["G10D03"]
+
+
+def test_categorias_de_archivo(tmp=None):
+    import os, tempfile
+    d = tempfile.mkdtemp()
+    ruta = os.path.join(d, "c.txt")
+    open(ruta, "w").write("G10D03  # alimentos\n\n# comentario\nG10D12\n")
+    assert pricesmart.categorias_de_archivo(ruta) == ["G10D03", "G10D12"]
+    assert pricesmart.categorias_de_archivo(os.path.join(d, "no_existe.txt")) == []
+
+
 if __name__ == "__main__":
     fallos = 0
     for n, f in sorted(globals().items()):
