@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comparador SV</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--ink:#1b2430;--mut:#6b7686;--line:#e4e1d8;--acc:#0b6b5a;--accbg:#e1f1ed;--warn:#8a5a00;--warnbg:#fff1d6;--bad:#a33;}
+@media (prefers-color-scheme:dark){:root{--bg:#10151b;--card:#18202a;--ink:#e9edf2;--mut:#93a0b1;--line:#27313d;--acc:#5fd0b8;--accbg:#12332e;--warn:#f0c46c;--warnbg:#3a2f12;--bad:#ff8a8a;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header,main{max-width:900px;margin:0 auto;padding:0 16px}
+header{padding-top:24px;padding-bottom:8px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--mut);font-size:.9rem;margin:0}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+input[type=search]{flex:1 1 220px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:1rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button.chip{padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-size:.9rem;cursor:pointer}
+button.chip[aria-pressed=true]{background:var(--accbg);border-color:var(--acc);color:var(--acc);font-weight:600}
+.lbl{font-size:.8rem;color:var(--mut);margin:12px 0 4px}
+ul{list-style:none;margin:0;padding:0}
+li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 10px;display:grid;grid-template-columns:1fr auto;gap:2px 12px}
+.n{font-weight:600}
+.m{color:var(--mut);font-size:.85rem}
+.u{text-align:right}
+.u b{font-size:1.2rem;color:var(--acc)}
+.u small{display:block;color:var(--mut)}
+.tag{display:inline-block;font-size:.72rem;padding:2px 8px;border-radius:999px;margin-right:4px}
+.t1{background:var(--accbg);color:var(--acc)}.t2{background:var(--warnbg);color:var(--warn)}.t3{background:#fbe3e3;color:var(--bad)}
+@media (prefers-color-scheme:dark){.t3{background:#3d1d1d}}
+.vacio{padding:32px 0;text-align:center;color:var(--mut)}
+footer{max-width:900px;margin:24px auto 40px;padding:0 16px;color:var(--mut);font-size:.8rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Comparador SV</h1>
+  <p class="sub" id="act"></p>
+</header>
+<main>
+  <div class="ctl"><input id="q" type="search" placeholder="Buscar: aceite de oliva, pañales, leche…" autocomplete="off"></div>
+  <div class="lbl">Comparar por</div>
+  <div class="chips" id="dims"></div>
+  <div class="lbl">Tiendas</div>
+  <div class="chips" id="tiendas"></div>
+  <div class="lbl" id="cuenta"></div>
+  <ul id="lista"></ul>
+</main>
+<footer>
+  Precio por unidad calculado a partir de lo que dice el nombre del producto; las presentaciones dudosas se marcan.
+  Los precios pueden cambiar o variar por sucursal. PriceSmart requiere membresía.
+</footer>
+<script>
+var DATOS = /*DATOS*/null;
+var DIMS = {masa:["por kg","$/kg"],volumen:["por litro","$/L"],unidad:["por unidad","$/un"]};
+var estado = {q:"", dim:null, tiendas:{}};
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");}
+function $(id){return document.getElementById(id);}
+function money(v){return "$"+v.toFixed(v<1?3:2);}
+function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+function init(){
+  var P=DATOS.productos;
+  P.forEach(function(p){p._k=norm(p.n);});
+  var cuentas={masa:0,volumen:0,unidad:0};
+  P.forEach(function(p){for(var d in p.pu)cuentas[d]++;});
+  estado.dim=Object.keys(cuentas).sort(function(a,b){return cuentas[b]-cuentas[a];})[0]||"volumen";
+  DATOS.tiendas.forEach(function(t){estado.tiendas[t]=true;});
+  if(DATOS.actualizado){
+    var f=new Date(DATOS.actualizado);
+    $("act").textContent="Precios actualizados: "+f.toLocaleString("es-SV",{dateStyle:"medium",timeStyle:"short"});
+  }
+  var dd=$("dims");
+  Object.keys(DIMS).forEach(function(d){
+    var b=mk("button","chip",DIMS[d][0]);b.setAttribute("aria-pressed",d===estado.dim);
+    b.onclick=function(){estado.dim=d;[].forEach.call(dd.children,function(c){c.setAttribute("aria-pressed",c===b);});render();};
+    dd.appendChild(b);
+  });
+  var tt=$("tiendas");
+  DATOS.tiendas.forEach(function(t){
+    var b=mk("button","chip",t);b.setAttribute("aria-pressed","true");
+    b.onclick=function(){estado.tiendas[t]=!estado.tiendas[t];b.setAttribute("aria-pressed",estado.tiendas[t]);render();};
+    tt.appendChild(b);
+  });
+  $("q").addEventListener("input",function(e){estado.q=norm(e.target.value.trim());render();});
+  render();
+}
+function render(){
+  var words=estado.q?estado.q.split(/\s+/):[];
+  var r=DATOS.productos.filter(function(p){
+    if(!(p.t.split(" · ")[0] in estado.tiendas)||!estado.tiendas[p.t.split(" · ")[0]])return false;
+    if(p.pu[estado.dim]==null)return false;
+    for(var i=0;i<words.length;i++)if(p._k.indexOf(words[i])<0)return false;
+    return true;
+  }).sort(function(a,b){return a.pu[estado.dim]-b.pu[estado.dim];});
+  var ul=$("lista");ul.textContent="";
+  $("cuenta").textContent=r.length+" productos, del más barato al más caro "+DIMS[estado.dim][0];
+  if(!r.length){ul.appendChild(mk("div","vacio","No hay resultados con esos filtros."));return;}
+  r.slice(0,200).forEach(function(p){
+    var li=mk("li");
+    var izq=mk("div");
+    izq.appendChild(mk("div","n",p.n));
+    var m=mk("div","m");
+    m.appendChild(mk("span","tag t1",p.t));
+    if(p.stock===false)m.appendChild(mk("span","tag t3","agotado en el club"));
+    if(p.amb){var a=mk("span","tag t2","presentación dudosa");a.title=p.nota;m.appendChild(a);}
+    m.appendChild(document.createTextNode(" "+p.tam+" · "+money(p.p)));
+    izq.appendChild(m);
+    var der=mk("div","u");
+    der.appendChild(mk("b",null,money(p.pu[estado.dim])));
+    der.appendChild(mk("small",null,DIMS[estado.dim][1]));
+    li.appendChild(izq);li.appendChild(der);ul.appendChild(li);
+  });
+}
+init();
+</script>
+</body>
+</html>
