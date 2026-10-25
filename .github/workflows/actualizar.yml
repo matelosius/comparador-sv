@@ -1,1 +1,33 @@
+name: Actualizar precios
 
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pruebas del motor y del lector
+        run: |
+          python3 test_comparador.py
+          python3 test_pricesmart.py
+      - name: Leer precios de PriceSmart (club Los Héroes)
+        run: python3 pricesmart.py --club 6702
+      - name: Generar la página
+        run: python3 build.py
+      - name: Guardar cambios
+        run: |
+          git config user.name "actualizador-precios"
+          git config user.email "actions@users.noreply.github.com"
+          git add data docs
+          git diff --cached --quiet || git commit -m "Actualizar precios $(date -u +%F)"
+          git push
