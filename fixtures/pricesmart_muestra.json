@@ -1,0 +1,164 @@
+{
+ "response": {
+  "numFound": 140,
+  "start": 0,
+  "docs": [
+   {
+    "price": 0.0,
+    "title": "Krusteaz Mezcla para Pasteles y Muffins Sabor Rollo de Canela con Toppings 3 Unidades / 411 g / 14.5 oz",
+    "pid": "494711",
+    "brand": "Krusteaz",
+    "currency": "USD",
+    "slug": "krusteaz-mezcla-para-pasteles-y-muffins-sabor-rollo-de-canela-con-toppings-3-unidades-411-g-14-5-oz-494711",
+    "variants": [
+     {
+      "skuid": "494711"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Kraft Mayonesa Real 3.78 L / 1 gal",
+    "pid": "642190",
+    "brand": "Kraft",
+    "currency": "USD",
+    "slug": "kraft-mayonesa-real-3-78-l-1-gal-642190",
+    "variants": [
+     {
+      "skuid": "642190"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Member's Selection Aceite de Oliva Extra Virgen Extraído en Frío 2 L",
+    "pid": "388043",
+    "brand": "Member's Selection",
+    "currency": "USD",
+    "slug": "members-selection-aceite-de-oliva-extra-virgen-extraido-en-frio-2-l-388043",
+    "variants": [
+     {
+      "skuid": "388043"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Member's Selection Mayonesa Cremosa con Sabor Natural 3.78 L / 128 oz",
+    "pid": "781060",
+    "brand": "Member's Selection",
+    "currency": "USD",
+    "slug": "members-selection-mayonesa-cremosa-con-sabor-natural-3-78-l-128-oz-781060",
+    "variants": [
+     {
+      "skuid": "781060"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Member's Selection Aceite de Coco Virgen Orgánico 1.65 L / 56 oz",
+    "pid": "669654",
+    "brand": "Member's Selection",
+    "currency": "USD",
+    "slug": "members-selection-aceite-de-coco-virgen-organico-1-65-l-56-oz-669654",
+    "variants": [
+     {
+      "skuid": "669654"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Member's Selection Aceite de Oliva Extra Suave 2 L / 67 oz",
+    "pid": "387935",
+    "brand": "Member's Selection",
+    "currency": "USD",
+    "slug": "members-selection-aceite-de-oliva-extra-suave-2-l-67-oz-387935",
+    "variants": [
+     {
+      "skuid": "387935"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Wesson Aceite de Canola 4.73 L",
+    "pid": "46369",
+    "brand": "Wesson",
+    "currency": "USD",
+    "slug": "wesson-aceite-de-canola-4-73-l-46369",
+    "variants": [
+     {
+      "skuid": "46369"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Bertolli Salsa para Pasta 3 Unidades / 680 g / 24 oz",
+    "pid": "14290",
+    "brand": "Bertolli",
+    "currency": "USD",
+    "slug": "bertolli-salsa-para-pasta-3-unidades-680-g-24-oz-14290",
+    "variants": [
+     {
+      "skuid": "14290"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Badia Ajo Granulado 680 g / 24 oz ",
+    "pid": "524550",
+    "brand": "Badia",
+    "currency": "USD",
+    "slug": "badia-ajo-granulado-680-g-24-oz-524550",
+    "variants": [
+     {
+      "skuid": "524550"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Krusteaz Mezcla en Polvo para Preparar Pancakes 4.53 kg / 10 lb",
+    "pid": "315",
+    "brand": "Krusteaz",
+    "currency": "USD",
+    "slug": "krusteaz-mezcla-en-polvo-para-preparar-pancakes-4-53-kg-10-lb-315",
+    "variants": [
+     {
+      "skuid": "315"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Kraft Mayonesa de Huevos de Gallina Libres 2 Unidades / 887 mL / 30 oz",
+    "pid": "772097",
+    "brand": "Kraft",
+    "currency": "USD",
+    "slug": "kraft-mayonesa-de-huevos-de-gallina-libres-2-unidades-887-ml-30-oz-772097",
+    "variants": [
+     {
+      "skuid": "772097"
+     }
+    ]
+   },
+   {
+    "price": 0.0,
+    "title": "Badia Sazonador Completo - Combinación de Hierbas y Especias 793.8 g / 1.75 lb",
+    "pid": "5512",
+    "brand": "Badia",
+    "currency": "USD",
+    "slug": "badia-sazonador-completo-combinacion-de-hierbas-y-especias-793-8-g-1-75-lb-5512",
+    "variants": [
+     {
+      "skuid": "5512"
+     }
+    ]
+   }
+  ]
+ }
+}
